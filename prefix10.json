@@ -1,0 +1,91 @@
+{
+  "module": {
+    "name": "Sample Module",
+    "sections": [
+      {
+        "sectionOrder": 1,
+        "directions": "Read the following passage and answer the questions.",
+        "items": [
+          {
+            "itemPosition": 1,
+            "stimulusText": "This is a sample passage used to test the functionality of the PDF generation script.",
+            "stemText": "What is the main purpose of this passage?",
+            "options": [
+              {
+                "optionLetter": "A",
+                "optionContent": "<p>To provide a sample passage.</p>"
+              },
+              {
+                "optionLetter": "B",
+                "optionContent": "<p>To test the PDF script.</p>"
+              },
+              {
+                "optionLetter": "C",
+                "optionContent": "<p>To discuss PDF generation.</p>"
+              },
+              {
+                "optionLetter": "D",
+                "optionContent": "<p>None of the above.</p>"
+              }
+            ],
+            "correctAnswer": "B"
+          },
+          {
+            "itemPosition": 2,
+            "stimulusText": "This is a sample passage used to test the functionality of the PDF generation script.",
+            "stemText": "Which option is NOT a purpose of this passage?",
+            "options": [
+              {
+                "optionLetter": "A",
+                "optionContent": "<p>To provide a sample passage.</p>"
+              },
+              {
+                "optionLetter": "B",
+                "optionContent": "<p>To test the PDF script.</p>"
+              },
+              {
+                "optionLetter": "C",
+                "optionContent": "<p>To discuss PDF generation.</p>"
+              },
+              {
+                "optionLetter": "D",
+                "optionContent": "<p>To explain quantum physics.</p>"
+              }
+            ],
+            "correctAnswer": "D"
+          }
+        ]
+      },
+      {
+        "sectionOrder": 2,
+        "directions": "Answer the following questions based on your knowledge.",
+        "items": [
+          {
+            "itemPosition": 1,
+            "stimulusText": "",
+            "stemText": "What is the capital of France?",
+            "options": [
+              {
+                "optionLetter": "A",
+                "optionContent": "<p>Berlin</p>"
+              },
+              {
+                "optionLetter": "B",
+                "optionContent": "<p>Madrid</p>"
+              },
+              {
+                "optionLetter": "C",
+                "optionContent": "<p>Paris</p>"
+              },
+              {
+                "optionLetter": "D",
+                "optionContent": "<p>Rome</p>"
+              }
+            ],
+            "correctAnswer": "C"
+          }
+        ]
+      }
+    ]
+  }
+}
