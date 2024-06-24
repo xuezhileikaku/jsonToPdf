@@ -115,29 +115,27 @@ def get_prefix_with_dash(input_string):
     return prefix
 
 
-def add_ques(print_num, question_data):
-    if Question.select().where(Question.printNum == print_num).exists():
-        # 如果存在，获取问题实例
-        question = Question.get(Question.printNum == print_num)
-        # 返回问题ID
-        return question
-# 尝试创建新问题
+def add_ques(print_num, ques_data):
+    # 添加问题到数据库的逻辑
     try:
-        # 使用create方法插入新问题，如果字段缺失则需要提供所有必需字段
-        new_question = Question.create(**question_data)
-        return new_question
-    except IntegrityError as e:
-        # 处理可能的数据库完整性错误，例如外键约束失败
-        return f"插入失败：{e}"
-def add_option(ques_id,ops_data):
-    if Option.select().where(Option.ques_id == ques_id).exists():
-        # 如果存在，获取问题实例
-        Option = Option.get(Option.ques_id == ques_id)
-        # 返回问题ID
-        return Option
-    # 尝试创建新问题
+        question, created = Question.get_or_create(print_num=print_num, defaults=ques_data)
+        if created:
+            return question
+        else:
+            return question
+    except Exception as e:
+        return str(e)
+
+
+def add_option(qu_id, ops_data):
+    # 检查是否已经存在选项
+    if Option.select().where(Option.ques_id == qu_id).exists():
+        # 如果存在，获取选项实例
+        existing_option = Option.get(Option.ques_id == qu_id)
+        return existing_option
+
     try:
-        # 使用create方法插入新问题，如果字段缺失则需要提供所有必需字段
+        # 使用 create 方法插入新选项
         new_option = Option.create(**ops_data)
         return new_option
     except IntegrityError as e:
@@ -166,8 +164,11 @@ def get_type_id(input_string):
 def json_ques(data):
     ques = []
     for sec in data:
-        qu = {"passage": "", "title": "", "fromId": "", "groupId": "", "ops_a": "", "ops_b": "", "ops_c": "",
-              "ops_d": "", "ops_e": "", "answer": "", "sec": "", "sec_tag": "", "type": "", "order": ""}
+        qu = {
+            "passage": "", "title": "", "fromId": "", "groupId": "",
+            "ops_a": "", "ops_b": "", "ops_c": "", "ops_d": "", "ops_e": "",
+            "answer": "", "sec": "", "sec_tag": "", "type": "", "order": ""
+        }
         ques_data = {
             'ques_title': '',
             'ques_section': 1,
@@ -175,40 +176,39 @@ def json_ques(data):
             'ques_type': '',
             'ques_create_time': datetime.now(),
             'passage': '',
-            'printNum': '',  # 假设printNum是问题的唯一标识符
+            'print_num': '',  # 假设print_num是问题的唯一标识符
         }
-
+        # 'print_num': '',
         qu['sec'] = str(sec['sectionOrder'])
         print(f"Section {sec['sectionOrder']}")
         qu['sec_tag'] = sec['sectionId']
-        sec_id=get_type_id(sec['sectionId'])
+        sec_id = get_type_id(sec['sectionId'])
         passage = ''
         for item in sec['items']:
-            ques_data['printNum']= sec['sectionId']+'_q'+ str(item['itemPosition'])+'_'+item['itemId']
+            ques_data = {
+                'ques_title': replace_tags(item['stemText']),
+                'ques_section': sec_id,
+                'ques_ans': item.get('correctAnswer', ''),
+                'ques_type': 118 if sec_id in [113, 114] else 119,
+                'ques_create_time': datetime.now(),
+                'passage': replace_tags(item['stimulusText']),
+                'print_num': f"{sec['sectionId']}_q{item['itemPosition']}_{item['itemId']}",
+            }
 
-            print(f"Question printNum{ ques_data['printNum']}")
-            qu['order'] = str(item['itemPosition'])
-
-            # print(passage,item['stimulusText'])
-
-            ques_data['passage']=qu['passage'] = replace_tags(item['stimulusText'])
-            ques_data['ques_title']=qu['title'] = replace_tags(item['stemText'])
-            ques_data['ques_section']=sec_id
-            if sec_id==113:
-                ques_data['ques_type']=118
-            elif sec_id==114:
-                ques_data['ques_type'] = 118
-            else:
-                ques_data['ques_type'] = 119
-
-            qu['fromId'] = item['itemId']
-            qu['groupId'] = item['groupId']
-            qu['type'] = get_prefix_with_dash(item['groupId'])
-            if 'correctAnswer' in item:
-                ques_data['ques_ans'] =qu['answer'] = item['correctAnswer']
-            print(ques_data)
+            qu.update({
+                'sec': str(sec['sectionOrder']),
+                'sec_tag': sec['sectionId'],
+                'passage': ques_data['passage'],
+                'title': ques_data['ques_title'],
+                'fromId': item['itemId'],
+                'groupId': item['groupId'],
+                'type': get_prefix_with_dash(item['groupId']),
+                'order': str(item['itemPosition']),
+                'answer': ques_data['ques_ans'],
+            })
+            print(f"Processing question: {ques_data['print_num']}")
             # 调用函数
-            result = add_ques(ques_data['printNum'], ques_data)
+            result = add_ques(ques_data['print_num'], ques_data)
             if isinstance(result, Question):
                 print(f"问题已成功插入，ID：{result.ques_id}")
             else:
@@ -216,23 +216,23 @@ def json_ques(data):
 
             ques_id = result.ques_id
 
-            op_data={}
-            for op in item['options']:
-                op_k = 'op' + op['optionLetter'].lower()
-                op_val = replace_tags(op['optionContent'])
-                op_data[op_k] = op_val
-            print(op_data);
+            if 'options' in item:
+                op_data = {'ques_id': ques_id}
+                for op in item['options']:
+                    op_k = f"op{op['optionLetter'].lower()}"
+                    op_val = replace_tags(op['optionContent'])
+                    op_data[op_k] = op_val
+                print(op_data)
 
-            res = add_option(ques_id, op_data)
-            if isinstance(res, Option):
-                print(f"选项已成功插入，ID：{res.id},ques_id:{res.ques_id}")
-            else:
-                print(res)
+                res = add_option(ques_id, op_data)
+                if isinstance(res, Option):
+                    print(f"选项已成功插入，ID：{res.id}, ques_id:{res.ques_id}")
+                else:
+                    print(res)
+            # break
 
-            break
-
-        ques.append(qu)
-        break
+        # ques.append(qu)
+        # break
 
 
 def main(json_path, pdf_path):
@@ -243,7 +243,7 @@ def main(json_path, pdf_path):
         # parse_json(data, pdf_file)
         json_ques(data)
         # print(f"PDF generated successfully and saved to {pdf_file}")
-        break
+        # break
 
 
 if __name__ == "__main__":
